@@ -15,6 +15,8 @@ export default defineConfig({
       shared: {
         react: { singleton: true, requiredVersion: '^19.0.0' },
         'react-dom': { singleton: true, requiredVersion: '^19.0.0' },
+        '@chakra-ui/react': { singleton: true },
+        '@emotion/react': { singleton: true },
       },
     }),
   ],

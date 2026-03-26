@@ -1,1 +1,6 @@
 node_modules/
+.direnv/
+.data/
+.references/
+.__mf__temp/
+
