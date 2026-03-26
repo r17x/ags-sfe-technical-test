@@ -6,9 +6,10 @@ type Props = {
   product: Product;
   showRatings?: boolean | undefined;
   lazy?: boolean | undefined;
+  priority?: boolean | undefined;
 };
 
-export const ProductCard = memo(function ProductCard({ product, showRatings, lazy }: Props) {
+export const ProductCard = memo(function ProductCard({ product, showRatings, lazy, priority }: Props) {
   return (
     <Card.Root as="li" overflow="hidden">
       <Image
@@ -18,6 +19,7 @@ export const ProductCard = memo(function ProductCard({ product, showRatings, laz
         fit="cover"
         width="100%"
         loading={lazy ? "lazy" : undefined}
+        {...(priority ? { fetchPriority: "high" } : {})}
       />
       <Card.Body gap="2" p="3">
         <Text fontWeight="semibold" lineClamp={1}>

@@ -45,12 +45,15 @@ export function VirtualProductGrid({ filtered, showRatings }: Props) {
         {virtualizer.getVirtualItems().map((virtualRow) => {
           const startIndex = virtualRow.index * cols;
           const rowProducts = filtered.slice(startIndex, startIndex + cols);
+          const isFirstRow = virtualRow.index === 0;
 
           return (
             <SimpleGrid
               as="ul"
               listStyleType="none"
               key={virtualRow.index}
+              ref={virtualizer.measureElement}
+              data-index={virtualRow.index}
               columns={cols}
               gap="4"
               position="absolute"
@@ -61,12 +64,13 @@ export function VirtualProductGrid({ filtered, showRatings }: Props) {
                 transform: `translateY(${virtualRow.start}px)`,
               }}
             >
-              {rowProducts.map((product) => (
+              {rowProducts.map((product, colIndex) => (
                 <ProductCard
                   key={product.id}
                   product={product}
                   showRatings={showRatings}
-                  lazy
+                  lazy={!isFirstRow}
+                  priority={isFirstRow && colIndex === 0}
                 />
               ))}
             </SimpleGrid>
