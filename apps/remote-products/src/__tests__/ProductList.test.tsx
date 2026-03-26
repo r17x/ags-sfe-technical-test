@@ -30,11 +30,11 @@ function renderWithProviders(ui: React.ReactElement) {
   );
 }
 
-describe("ProductList", () => {
+describe("ProductList (paginated)", () => {
   it("renders loading then products", async () => {
     const { default: ProductList } = await import("../ProductList");
 
-    renderWithProviders(<ProductList />);
+    renderWithProviders(<ProductList featureFlags={{ virtualScroll: false }} />);
 
     await waitFor(() => {
       expect(screen.getByText("Blue Widget")).toBeInTheDocument();
@@ -47,7 +47,7 @@ describe("ProductList", () => {
     const user = userEvent.setup();
     const { default: ProductList } = await import("../ProductList");
 
-    renderWithProviders(<ProductList />);
+    renderWithProviders(<ProductList featureFlags={{ virtualScroll: false }} />);
 
     await waitFor(() => {
       expect(screen.getByText("Blue Widget")).toBeInTheDocument();
@@ -64,7 +64,7 @@ describe("ProductList", () => {
   it("shows ratings when featureFlag is set", async () => {
     const { default: ProductList } = await import("../ProductList");
 
-    renderWithProviders(<ProductList featureFlags={{ showRatings: true }} />);
+    renderWithProviders(<ProductList featureFlags={{ showRatings: true, virtualScroll: false }} />);
 
     await waitFor(() => {
       expect(screen.getByText("Blue Widget")).toBeInTheDocument();
@@ -76,7 +76,7 @@ describe("ProductList", () => {
   it("hides ratings when featureFlag is not set", async () => {
     const { default: ProductList } = await import("../ProductList");
 
-    renderWithProviders(<ProductList />);
+    renderWithProviders(<ProductList featureFlags={{ virtualScroll: false }} />);
 
     await waitFor(() => {
       expect(screen.getByText("Blue Widget")).toBeInTheDocument();
@@ -93,10 +93,40 @@ describe("ProductList", () => {
     vi.resetModules();
     const { default: ProductList } = await import("../ProductList");
 
-    renderWithProviders(<ProductList />);
+    renderWithProviders(<ProductList featureFlags={{ virtualScroll: false }} />);
 
     await waitFor(() => {
       expect(screen.getByText("Failed to load products")).toBeInTheDocument();
     });
+  });
+});
+
+describe("ProductList (virtual scroll)", () => {
+  it("renders scroll container without pagination buttons", async () => {
+    const { default: ProductList } = await import("../ProductList");
+
+    renderWithProviders(<ProductList featureFlags={{ virtualScroll: true }} />);
+
+    // Wait for data to load (filters populate with categories)
+    await waitFor(() => {
+      expect(screen.getByLabelText("Filter by category")).toBeInTheDocument();
+    });
+
+    // Virtual scroll path should not render pagination controls
+    expect(screen.queryByText("Previous")).not.toBeInTheDocument();
+    expect(screen.queryByText("Next")).not.toBeInTheDocument();
+  });
+
+  it("defaults to virtual scroll when virtualScroll flag is omitted", async () => {
+    const { default: ProductList } = await import("../ProductList");
+
+    renderWithProviders(<ProductList />);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Filter by category")).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText("Previous")).not.toBeInTheDocument();
+    expect(screen.queryByText("Next")).not.toBeInTheDocument();
   });
 });

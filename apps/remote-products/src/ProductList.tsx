@@ -1,11 +1,8 @@
 import React, { useDeferredValue, useMemo, useState } from "react";
 import {
-  Badge,
   Box,
   Button,
-  Card,
   Flex,
-  Image,
   Input,
   NativeSelect,
   SimpleGrid,
@@ -23,19 +20,23 @@ import {
   totalPages,
   type SortDirection,
 } from "./filters";
+import { ProductCard } from "./ProductCard";
+import { VirtualProductGrid } from "./VirtualProductGrid";
 
 const PER_PAGE = 24;
 
-type Props = { featureFlags?: { showRatings?: boolean } };
+type Props = {
+  featureFlags?: { showRatings?: boolean; virtualScroll?: boolean };
+};
 
 export default function ProductList({ featureFlags }: Props) {
   const productsState = useProducts();
+  const isVirtual = featureFlags?.virtualScroll !== false;
 
   const [query, setQuery] = useState("");
   const deferredQuery = useDeferredValue(query);
   const [category, setCategory] = useState("all");
   const [sort, setSort] = useState<SortDirection>("asc");
-  const [page, setPage] = useState(1);
 
   const categories = useMemo(
     () =>
@@ -52,30 +53,10 @@ export default function ProductList({ featureFlags }: Props) {
     return sortByPrice(categorized, sort);
   }, [productsState, deferredQuery, category, sort]);
 
-  const pages = totalPages(filtered.length, PER_PAGE);
-  const currentPage = Math.min(page, pages);
-  const visible = paginate(filtered, currentPage, PER_PAGE);
-
   const resetFilters = () => {
     setQuery("");
     setCategory("all");
     setSort("asc");
-    setPage(1);
-  };
-
-  const handleCategoryChange = (val: string) => {
-    setCategory(val);
-    setPage(1);
-  };
-
-  const handleSortChange = (val: SortDirection) => {
-    setSort(val);
-    setPage(1);
-  };
-
-  const handleSearchChange = (val: string) => {
-    setQuery(val);
-    setPage(1);
   };
 
   if (productsState.status === "loading") {
@@ -115,14 +96,14 @@ export default function ProductList({ featureFlags }: Props) {
             placeholder="Search products…"
             aria-label="Search products"
             value={query}
-            onChange={(e) => handleSearchChange(e.target.value)}
+            onChange={(e) => setQuery(e.target.value)}
           />
         </Box>
         <NativeSelect.Root width="auto" minW="140px">
           <NativeSelect.Field
             aria-label="Filter by category"
             value={category}
-            onChange={(e) => handleCategoryChange(e.target.value)}
+            onChange={(e) => setCategory(e.target.value)}
           >
             {categories.map((c) => (
               <option key={c} value={c}>
@@ -135,7 +116,7 @@ export default function ProductList({ featureFlags }: Props) {
           <NativeSelect.Field
             aria-label="Sort by price"
             value={sort}
-            onChange={(e) => handleSortChange(e.target.value as SortDirection)}
+            onChange={(e) => setSort(e.target.value as SortDirection)}
           >
             <option value="asc">Price: Low → High</option>
             <option value="desc">Price: High → Low</option>
@@ -146,48 +127,53 @@ export default function ProductList({ featureFlags }: Props) {
         </Button>
       </Flex>
 
-      {visible.length === 0 ? (
+      {filtered.length === 0 ? (
         <Box p="8" textAlign="center">
           <Text color="fg.muted">No products found</Text>
         </Box>
+      ) : isVirtual ? (
+        <VirtualProductGrid
+          filtered={filtered}
+          showRatings={featureFlags?.showRatings}
+        />
       ) : (
-        <SimpleGrid
-          as="ul"
-          listStyleType="none"
-          columns={{ base: 1, sm: 2, md: 3, lg: 4 }}
-          gap="4"
-        >
-          {visible.map((product) => (
-            <Card.Root as="li" key={product.id} overflow="hidden">
-              <Image
-                src={product.image}
-                alt={product.name}
-                height="200px"
-                fit="cover"
-                width="100%"
-              />
-              <Card.Body gap="2" p="3">
-                <Text fontWeight="semibold" lineClamp={1}>
-                  {product.name}
-                </Text>
-                <Flex justify="space-between" align="center">
-                  <Text fontWeight="bold" fontSize="lg">
-                    ${product.price.toFixed(2)}
-                  </Text>
-                  <Badge colorPalette="blue" variant="subtle">
-                    {product.category}
-                  </Badge>
-                </Flex>
-                {featureFlags?.showRatings && (
-                  <Text fontSize="sm" color="fg.muted">
-                    Rating: {product.rating}/5
-                  </Text>
-                )}
-              </Card.Body>
-            </Card.Root>
-          ))}
-        </SimpleGrid>
+        <PaginatedGrid
+          filtered={filtered}
+          showRatings={featureFlags?.showRatings}
+        />
       )}
+    </Stack>
+  );
+}
+
+function PaginatedGrid({
+  filtered,
+  showRatings,
+}: {
+  filtered: ReadonlyArray<import("./Products").Product>;
+  showRatings?: boolean | undefined;
+}) {
+  const [page, setPage] = useState(1);
+  const pages = totalPages(filtered.length, PER_PAGE);
+  const currentPage = Math.min(page, pages);
+  const visible = paginate(filtered, currentPage, PER_PAGE);
+
+  return (
+    <>
+      <SimpleGrid
+        as="ul"
+        listStyleType="none"
+        columns={{ base: 1, sm: 2, md: 3, lg: 4 }}
+        gap="4"
+      >
+        {visible.map((product) => (
+          <ProductCard
+            key={product.id}
+            product={product}
+            showRatings={showRatings}
+          />
+        ))}
+      </SimpleGrid>
 
       {pages > 1 && (
         <Flex justify="center" gap="2" align="center" pt="2">
@@ -212,6 +198,6 @@ export default function ProductList({ featureFlags }: Props) {
           </Button>
         </Flex>
       )}
-    </Stack>
+    </>
   );
 }

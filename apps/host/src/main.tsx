@@ -1,4 +1,4 @@
-import React, { lazy, Suspense } from "react";
+import React, { lazy, Suspense, useReducer, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
   ChakraProvider,
@@ -6,6 +6,8 @@ import {
   SimpleGrid,
   Skeleton,
   Box,
+  Button,
+  Flex,
   Text,
 } from "@chakra-ui/react";
 import { ErrorBoundary } from "./components/ErrorBoundary";
@@ -36,7 +38,65 @@ function RemoteError() {
   );
 }
 
+type FlagKey = "showRatings" | "virtualScroll";
+type Flags = Record<FlagKey, boolean>;
+
+const defaultFlags: Flags = {
+  showRatings: true,
+  virtualScroll: true,
+};
+
+const flagLabels: Record<FlagKey, string> = {
+  showRatings: "Ratings",
+  virtualScroll: "Virtual Scroll",
+};
+
+function flagsReducer(state: Flags, key: FlagKey): Flags {
+  return { ...state, [key]: !state[key] };
+}
+
+function FeatureFlagToolbar({
+  flags,
+  onToggle,
+}: {
+  flags: Flags;
+  onToggle: (key: FlagKey) => void;
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Box position="fixed" bottom="4" right="4" zIndex="popover">
+      <Flex direction="column" align="end" gap="2">
+        {open &&
+          (Object.keys(flags) as FlagKey[]).map((key) => (
+            <Button
+              key={key}
+              size="sm"
+              colorPalette={flags[key] ? "teal" : "gray"}
+              onClick={() => onToggle(key)}
+              boxShadow="md"
+              borderRadius="full"
+            >
+              {flagLabels[key] ?? key}: {flags[key] ? "ON" : "OFF"}
+            </Button>
+          ))}
+        <Button
+          size="sm"
+          colorPalette="blue"
+          onClick={() => setOpen((o) => !o)}
+          boxShadow="lg"
+          borderRadius="full"
+        >
+          {open ? "Close" : "Feature Flags"}
+        </Button>
+      </Flex>
+    </Box>
+  );
+}
+
 function App() {
+  const [flags, toggleFlag] = useReducer(flagsReducer, defaultFlags);
+
   return (
     <ChakraProvider value={defaultSystem}>
       <Box fontFamily="system-ui, sans-serif" p="4">
@@ -57,11 +117,13 @@ function App() {
         <Box as="main">
           <ErrorBoundary fallback={<RemoteError />}>
             <Suspense fallback={<LoadingSkeleton />}>
-              <ProductList featureFlags={{ showRatings: true }} />
+              <ProductList featureFlags={flags} />
             </Suspense>
           </ErrorBoundary>
         </Box>
       </Box>
+
+      <FeatureFlagToolbar flags={flags} onToggle={toggleFlag} />
     </ChakraProvider>
   );
 }
