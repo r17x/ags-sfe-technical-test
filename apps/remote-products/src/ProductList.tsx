@@ -2,8 +2,11 @@ import React, { useDeferredValue, useMemo, useState } from "react";
 import {
   Box,
   Button,
+  CloseButton,
   Flex,
+  Group,
   Input,
+  InputElement,
   NativeSelect,
   SimpleGrid,
   Skeleton,
@@ -24,6 +27,8 @@ import { ProductCard } from "./ProductCard";
 import { VirtualProductGrid } from "./VirtualProductGrid";
 
 const PER_PAGE = 24;
+const DEFAULT_CATEGORY = "all";
+const DEFAULT_SORT: SortDirection = "asc";
 
 type Props = {
   featureFlags?: { showRatings?: boolean; virtualScroll?: boolean };
@@ -35,14 +40,14 @@ export default function ProductList({ featureFlags }: Props) {
 
   const [query, setQuery] = useState("");
   const deferredQuery = useDeferredValue(query);
-  const [category, setCategory] = useState("all");
-  const [sort, setSort] = useState<SortDirection>("asc");
+  const [category, setCategory] = useState(DEFAULT_CATEGORY);
+  const [sort, setSort] = useState(DEFAULT_SORT);
 
   const categories = useMemo(
     () =>
       productsState.status === "ok"
         ? extractCategories(productsState.data)
-        : ["all"],
+        : [DEFAULT_CATEGORY],
     [productsState],
   );
 
@@ -55,9 +60,13 @@ export default function ProductList({ featureFlags }: Props) {
 
   const resetFilters = () => {
     setQuery("");
-    setCategory("all");
-    setSort("asc");
+    setCategory(DEFAULT_CATEGORY);
+    setSort(DEFAULT_SORT);
   };
+
+  const activeFilterCount =
+    (query ? 1 : 0) + (category !== DEFAULT_CATEGORY ? 1 : 0) + (sort !== DEFAULT_SORT ? 1 : 0);
+  const hasActiveFilters = activeFilterCount > 0;
 
   if (productsState.status === "loading") {
     return (
@@ -91,23 +100,34 @@ export default function ProductList({ featureFlags }: Props) {
         wrap="wrap"
         align="center"
       >
-        <Box flex="1" minW="200px">
-          <Input
-            placeholder="Search products…"
-            aria-label="Search products"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-        </Box>
+        <Group flex="1" minW="200px">
+            <Input
+              placeholder="Search products…"
+              aria-label="Search products"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              pe={query ? "8" : undefined}
+            />
+            {query && (
+              <InputElement placement="end">
+                <CloseButton
+                  size="xs"
+                  aria-label="Clear search"
+                  onClick={() => setQuery("")}
+                />
+              </InputElement>
+            )}
+        </Group>
         <NativeSelect.Root width="auto" minW="140px">
           <NativeSelect.Field
             aria-label="Filter by category"
             value={category}
             onChange={(e) => setCategory(e.target.value)}
+            textTransform="capitalize"
           >
             {categories.map((c) => (
               <option key={c} value={c}>
-                {c}
+                {c === "all" ? "All categories" : c}
               </option>
             ))}
           </NativeSelect.Field>
@@ -122,16 +142,20 @@ export default function ProductList({ featureFlags }: Props) {
             <option value="desc">Price: High → Low</option>
           </NativeSelect.Field>
         </NativeSelect.Root>
-        <Button variant="outline" onClick={resetFilters}>
-          Reset
+        <Button
+          variant={hasActiveFilters ? "solid" : "outline"}
+          colorPalette={hasActiveFilters ? "blue" : undefined}
+          onClick={resetFilters}
+        >
+          {hasActiveFilters ? `Reset (${activeFilterCount})` : "Reset"}
         </Button>
       </Flex>
 
-      <Box aria-live="polite" aria-atomic="true" srOnly>
+      <Text fontSize="sm" color="fg.muted" aria-live="polite" aria-atomic="true">
         {filtered.length === 0
           ? "No products found"
           : `${filtered.length} product${filtered.length === 1 ? "" : "s"} found`}
-      </Box>
+      </Text>
 
       {filtered.length === 0 ? (
         <Box p="8" textAlign="center">

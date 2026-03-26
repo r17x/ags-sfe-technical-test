@@ -70,7 +70,7 @@ describe("ProductList (paginated)", () => {
       expect(screen.getByText("Blue Widget")).toBeInTheDocument();
     });
 
-    expect(screen.getByText("Rating: 4.5/5")).toBeInTheDocument();
+    expect(screen.getByText("4.5/5")).toBeInTheDocument();
   });
 
   it("hides ratings when featureFlag is not set", async () => {
@@ -82,7 +82,7 @@ describe("ProductList (paginated)", () => {
       expect(screen.getByText("Blue Widget")).toBeInTheDocument();
     });
 
-    expect(screen.queryByText(/Rating:/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/\/5/)).not.toBeInTheDocument();
   });
 
   it("shows error state on fetch failure", async () => {
