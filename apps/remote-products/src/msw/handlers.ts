@@ -27,7 +27,7 @@ function generateProducts(count: number) {
 export const handlers = [
   http.get('/api/products', async () => {
     const data = generateProducts(2000);
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise(resolve => setTimeout(resolve, 300));
     return HttpResponse.json(data);
   }),
 ];

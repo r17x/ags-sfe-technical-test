@@ -12,7 +12,8 @@ import {
 } from "@chakra-ui/react";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 
-const ProductList = lazy(() => import("products/ProductList"));
+const productListPromise = import("products/ProductList");
+const ProductList = lazy(() => productListPromise);
 
 function LoadingSkeleton() {
   return (
