@@ -127,6 +127,12 @@ export default function ProductList({ featureFlags }: Props) {
         </Button>
       </Flex>
 
+      <Box aria-live="polite" aria-atomic="true" srOnly>
+        {filtered.length === 0
+          ? "No products found"
+          : `${filtered.length} product${filtered.length === 1 ? "" : "s"} found`}
+      </Box>
+
       {filtered.length === 0 ? (
         <Box p="8" textAlign="center">
           <Text color="fg.muted">No products found</Text>

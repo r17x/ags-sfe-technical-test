@@ -99,6 +99,20 @@ function App() {
 
   return (
     <ChakraProvider value={defaultSystem}>
+      <Box
+        as="a"
+        href="#main-content"
+        position="absolute"
+        top="-40px"
+        left="0"
+        bg="blue.600"
+        color="white"
+        p="2"
+        zIndex="skipLink"
+        _focus={{ top: "0" }}
+      >
+        Skip to main content
+      </Box>
       <Box fontFamily="system-ui, sans-serif" p="4">
         <Box
           as="header"
@@ -114,7 +128,7 @@ function App() {
             Vite &bull; Module Federation &bull; React 19
           </Text>
         </Box>
-        <Box as="main">
+        <Box as="main" id="main-content">
           <ErrorBoundary fallback={<RemoteError />}>
             <Suspense fallback={<LoadingSkeleton />}>
               <ProductList featureFlags={flags} />

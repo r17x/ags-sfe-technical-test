@@ -33,6 +33,9 @@ export function VirtualProductGrid({ filtered, showRatings }: Props) {
       ref={scrollRef}
       overflow="auto"
       height="calc(100vh - 160px)"
+      tabIndex={0}
+      role="region"
+      aria-label="Product grid"
     >
       <Box
         position="relative"
