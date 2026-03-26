@@ -74,63 +74,7 @@
       # ===================================
       # Flake-wide outputs (overlays)
       # ===================================
-      flake = {
-        # Overlay for adding dtx to other flakes
-        overlays.default = final: prev: {
-          dtx = final.callPackage (
-            { crane, ... }:
-            let
-              craneLib = crane.mkLib final;
-              # NOTE: source filter duplicated from perSystem (keep in sync)
-              commonArgs = {
-                src = final.lib.cleanSourceWith {
-                  src = ./.;
-                  filter =
-                    path: type:
-                    (craneLib.filterCargoSources path type)
-                    || (final.lib.hasInfix "/templates/" path)
-                    || (final.lib.hasInfix "/static/" path);
-                };
-                strictDeps = true;
-                nativeBuildInputs = [ final.pkg-config ];
-                buildInputs =
-                  [
-                    final.sqlite
-                    final.openssl
-                  ]
-                  ++ final.lib.optionals final.stdenv.hostPlatform.isDarwin [
-                    final.libiconv
-                  ];
-                DATABASE_URL = "sqlite::memory:";
-                SQLX_OFFLINE = "true";
-              };
-              cargoArtifacts = craneLib.buildDepsOnly commonArgs;
-            in
-            craneLib.buildPackage (
-              commonArgs
-              // {
-                inherit cargoArtifacts;
-                meta = {
-                  description = "Dev Tools eXperience - Control plane for process-compose with Nix integration";
-                  homepage = "https://github.com/r17x/dtx";
-                  license = with final.lib.licenses; [
-                    mit
-                    asl20
-                  ];
-                  mainProgram = "dtx";
-                };
-              }
-            )
-          ) { crane = inputs.crane; };
-        };
-
-        # NixOS module (optional, for system-wide installation)
-        nixosModules.default =
-          { pkgs, ... }:
-          {
-            environment.systemPackages = [ pkgs.dtx ];
-          };
-      };
+      flake = { };
     };
 
   inputs = {
